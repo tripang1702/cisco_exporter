@@ -49,10 +49,22 @@ func (*bgpCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect collects metrics from Cisco
 func (c *bgpCollector) Collect(client *rpc.Client, ch chan<- prometheus.Metric, labelValues []string) error {
-	out, err := client.RunCommand("show bgp all summary")
-	if err != nil {
-		return err
+	var out string
+	var err error
+	if client.OSType == rpc.IOSXR {
+		out, err = client.RunCommand("sh bgp summary")
+		if err != nil {
+			return err
+		}
+
+	} else {
+		out, err = client.RunCommand("show bgp all summary")
+		if err != nil {
+			return err
+		}
+
 	}
+
 	items, err := c.Parse(client.OSType, out)
 	if err != nil {
 		if client.Debug {
